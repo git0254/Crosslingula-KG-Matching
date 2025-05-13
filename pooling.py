@@ -49,12 +49,19 @@ def mean_pool(input_tensor, sequence_length=None):
                              expanded_sequence_length)
         return mean_pooled_input
 
+# 定义一个函数，用于处理填充最大池化
 def handle_pad_max_pooling(tensor, last_dim):
+    # 将tensor重新塑形为[-1, last_dim]的形状
     tensor = tf.reshape(tensor, [-1, last_dim])
+    # 获取tensor的第一维的大小
     bs = tf.shape(tensor)[0]
+    # 创建一个大小为[bs, last_dim]的全为-1e9的张量
     tt = tf.fill(tf.stack([bs, last_dim]), -1e9)
+    # 判断tensor中是否等于0.0
     cond = tf.not_equal(tensor, 0.0)
+    # 如果等于0.0，则将tensor中的值替换为-1e9
     res = tf.where(cond, tensor, tt)
+    # 返回处理后的tensor
     return res
 
 def max_pool(input_tensor, last_dim, sequence_length=None):
@@ -67,7 +74,10 @@ def max_pool(input_tensor, last_dim, sequence_length=None):
     with tf.name_scope("max_pool"):
         #shape [batch_size, sequence_length]
         mid_dim = tf.shape(input_tensor)[1]
+        #处理padding
         input_tensor = handle_pad_max_pooling(input_tensor, last_dim)
+        #将input_tensor重新reshape为[batch_size*sequence_length, mid_dim, last_dim]
         input_tensor = tf.reshape(input_tensor, [-1, mid_dim, last_dim])
+        #在mid_dim维度上取最大值
         input_tensor_max = tf.reduce_max(input_tensor, axis=-2)
         return input_tensor_max
